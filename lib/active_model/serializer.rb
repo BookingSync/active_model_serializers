@@ -114,6 +114,7 @@ end
       @include_associations = Array(options[:include])
       @url_options          = options[:url_options]
     end
+
     attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
     attr_reader :url_options
 
@@ -206,7 +207,7 @@ end
 
     def build_serializer(association)
       object = send(association.name)
-      association.build_serializer(object, scope: scope)
+      association.build_serializer(object, scope: scope, url_options: url_options)
     end
 
     def serialize(association)
