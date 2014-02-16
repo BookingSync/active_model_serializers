@@ -65,5 +65,18 @@ module ActiveModel
         }, @post_serializer.as_json)
       end
     end
+
+    class FilterFieldsTest < Minitest::Test
+      def setup
+        @profile = Profile.new({ name: 'Name 1', description: 'Description 1' })
+        @profile_serializer = ProfileSerializer.new(@profile, { fields: [:description] })
+      end
+
+      def test_filtered_by_fields_parameter
+        assert_equal({
+          'profile' => { description: 'Description 1' }
+        }, @profile_serializer.as_json)
+      end
+    end
   end
 end

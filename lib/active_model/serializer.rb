@@ -110,8 +110,9 @@ end
       @wrap_in_array = options[:_wrap_in_array]
       @only          = Array(options[:only]) if options[:only]
       @except        = Array(options[:except]) if options[:except]
+      @fields        = options[:fields]
     end
-    attr_accessor :object, :scope, :root, :meta_key, :meta
+    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
 
     def json_key
       if root == true || root.nil?
@@ -122,14 +123,14 @@ end
     end
 
     def attributes
-      filter(self.class._attributes.dup).each_with_object({}) do |name, hash|
+      filterize_keys(self.class._attributes.dup).each_with_object({}) do |name, hash|
         hash[name] = send(name)
       end
     end
 
     def associations
       associations = self.class._associations
-      included_associations = filter(associations.keys)
+      included_associations = filterize_associations(associations.keys)
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
           if association.embed_ids?
@@ -138,6 +139,19 @@ end
             hash[association.embedded_key] = serialize association
           end
         end
+      end
+    end
+
+    def filterize_associations(keys)
+      filter(keys)
+    end
+
+    def filterize_keys(keys)
+      filtered = filter(keys)
+      if fields.present?
+        filtered & fields
+      else
+        filtered
       end
     end
 
@@ -153,7 +167,7 @@ end
 
     def embedded_in_root_associations
       associations = self.class._associations
-      included_associations = filter(associations.keys)
+      included_associations = filterize_associations(associations.keys)
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
           if association.embed_in_root?
