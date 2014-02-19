@@ -66,5 +66,24 @@ module ActiveModel
         }, @post_serializer.as_json)
       end
     end
+
+    class FilterFieldsWithAssociationTest < Minitest::Test
+      def setup
+        @association = PostSerializer._associations[:comments]
+        @old_association = @association.dup
+        @post = Post.new({ title: 'Title 1', body: 'Body 1', date: '1/1/2000' })
+        @post_serializer = PostSerializer.new(@post, { fields: [:title], include: [:comments] })
+      end
+
+      def teardown
+        PostSerializer._associations[:comments] = @old_association
+      end
+
+      def test_filtered_by_fields_parameter
+        assert_equal({
+          'post' => { title: 'Title 1', comments: [{ content: "C1" }, { content: "C2" }] }
+        }, @post_serializer.as_json)
+      end
+    end
   end
 end
