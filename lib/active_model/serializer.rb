@@ -111,6 +111,7 @@ end
       @only          = Array(options[:only]) if options[:only]
       @except        = Array(options[:except]) if options[:except]
       @fields        = options[:fields]
+      @include       = options[:include]
     end
     attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
 
@@ -145,7 +146,7 @@ end
     def filterize_keys(keys)
       filtered = filter(keys)
       if fields.present?
-        filtered & fields
+        filtered & (fields + include_associations)
       else
         filtered
       end
@@ -159,6 +160,10 @@ end
       else
         keys
       end
+    end
+
+    def include_associations
+      self.class._associations.keys & Array(@include)
     end
 
     def embedded_in_root_associations

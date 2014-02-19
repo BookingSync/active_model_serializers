@@ -67,8 +67,10 @@ module ActionController
       if serializer = options.fetch(:serializer, ActiveModel::Serializer.serializer_for(resource))
         options[:scope] = serialization_scope unless options.has_key?(:scope)
         options[:resource_name] = controller_name if resource.respond_to?(:to_ary)
-        if params.has_key?(:fields)
-          options[:fields] = params[:fields].split(',').map(&:to_sym)
+        [:fields, :include].each do |param|
+          if params.has_key?(param)
+            options[param] = params[param].split(',').map(&:to_sym)
+          end
         end
 
         serializer.new(resource, options)
