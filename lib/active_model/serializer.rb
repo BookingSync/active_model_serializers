@@ -128,7 +128,7 @@ end
 
     def associations
       associations = self.class._associations
-      included_associations = filterize_associations(associations.keys)
+      included_associations = filterize_keys(associations.keys)
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
           if association.embed_ids?
@@ -138,10 +138,6 @@ end
           end
         end
       end
-    end
-
-    def filterize_associations(keys)
-      filter(keys)
     end
 
     def filterize_keys(keys)
@@ -159,7 +155,7 @@ end
 
     def embedded_in_root_associations
       associations = self.class._associations
-      included_associations = filterize_associations(associations.keys)
+      included_associations = filterize_keys(associations.keys)
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
           if association.embed_in_root?
