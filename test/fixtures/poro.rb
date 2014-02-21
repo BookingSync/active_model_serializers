@@ -59,6 +59,12 @@ class PostSerializer < ActiveModel::Serializer
   has_many :comments
 end
 
+class LightPostSerializer < ActiveModel::Serializer
+  attributes :title
+
+  has_many :comments, visible: false
+end
+
 class CommentSerializer < ActiveModel::Serializer
   attributes :content
 end

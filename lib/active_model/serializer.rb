@@ -102,14 +102,14 @@ end
     end
 
     def initialize(object, options={})
-      @object        = object
-      @scope         = options[:scope]
-      @root          = options.fetch(:root, self.class._root)
-      @meta_key      = options[:meta_key] || :meta
-      @meta          = options[@meta_key]
-      @wrap_in_array = options[:_wrap_in_array]
-      @fields        = options[:fields]
-      @include       = options[:include]
+      @object               = object
+      @scope                = options[:scope]
+      @root                 = options.fetch(:root, self.class._root)
+      @meta_key             = options[:meta_key] || :meta
+      @meta                 = options[@meta_key]
+      @wrap_in_array        = options[:_wrap_in_array]
+      @fields               = options[:fields]
+      @include_associations = Array(options[:include])
     end
     attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
 
@@ -129,7 +129,7 @@ end
 
     def associations
       associations = self.class._associations
-      included_associations = filterize_keys(associations.keys)
+      included_associations = filterize_associations(associations).keys
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
           if association.embed_ids?
@@ -141,26 +141,41 @@ end
       end
     end
 
+    # First filters associations using #filter method
+    # which can be overwritten by user
+    # then removes all associations which are hidden e.g
+    # with option visible: false
+    def filterize_associations(associations)
+      filtered_associations = filter(associations.keys)
+      associations.reject do |name, association|
+        next true if filtered_associations.exclude?(name)
+        next false if @include_associations.include?(name)
+        true if association.hidden?
+      end
+    end
+
+    # First filters keys using #filter method which can be overwritten
+    # by user, then if fields is present, shows only keys which are
+    # in fields
     def filterize_keys(keys)
       filtered = filter(keys)
       if fields.present?
-        filtered & (fields + include_associations)
+        filtered & fields
       else
         filtered
       end
     end
 
+    # this method can be overwritten in serializer
+    # and it's a part of AMS API that's why filterize_associations
+    # and filterize_keys
     def filter(keys)
       keys
     end
 
-    def include_associations
-      self.class._associations.keys & Array(@include)
-    end
-
     def embedded_in_root_associations
       associations = self.class._associations
-      included_associations = filterize_keys(associations.keys)
+      included_associations = filterize_associations(associations).keys
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
           if association.embed_in_root?

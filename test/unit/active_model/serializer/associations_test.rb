@@ -15,5 +15,44 @@ module ActiveModel
                      another_inherited_serializer_klass._associations.keys)
       end
     end
+
+    class HiddenAssociationsTest < Minitest::Test
+      def setup
+        @association = LightPostSerializer._associations[:comments]
+        @old_association = @association.dup
+        @post = Post.new({ title: 'Title 1', body: 'Body 1', date: '1/1/2000' })
+        @post_serializer = LightPostSerializer.new(@post)
+      end
+
+      def teardown
+        LightPostSerializer._associations[:comments] = @old_association
+      end
+
+      def test_hidden_association
+        assert_equal({
+          'light_post' => { title: 'Title 1' }
+        }, @post_serializer.as_json)
+      end
+    end
+
+    class ShowHiddenAssociationsWithIncludeTest < Minitest::Test
+      def setup
+        @association = LightPostSerializer._associations[:comments]
+        @old_association = @association.dup
+        @post = Post.new({ title: 'Title 1', body: 'Body 1', date: '1/1/2000' })
+        @post_serializer = LightPostSerializer.new(@post)
+      end
+
+      def teardown
+        LightPostSerializer._associations[:comments] = @old_association
+      end
+
+      def test_show_hidden_association_with_include
+        @post_serializer = LightPostSerializer.new(@post, include: :comments)
+        assert_equal({
+          'light_post' => { title: 'Title 1', :comments => [{:content=>"C1"}, {:content=>"C2"}] }
+        }, @post_serializer.as_json)
+      end
+    end
   end
 end

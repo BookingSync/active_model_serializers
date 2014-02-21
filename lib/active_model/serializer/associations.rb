@@ -18,13 +18,15 @@ module ActiveModel
         @embed_key     = options[:embed_key] || :id
         @key           = options[:key]
         @embedded_key  = options[:root] || name
+        @visible       = options.fetch(:visible, true)
 
         serializer = @options[:serializer]
         @serializer_from_options = serializer.is_a?(String) ? serializer.constantize : serializer
       end
 
       attr_reader :name, :embed_ids, :embed_objects
-      attr_accessor :embed_in_root, :embed_key, :key, :embedded_key, :root_key, :serializer_from_options, :options
+      attr_accessor :embed_in_root, :embed_key, :key, :embedded_key,
+        :root_key, :serializer_from_options, :options, :visible
       alias embed_ids? embed_ids
       alias embed_objects? embed_objects
       alias embed_in_root? embed_in_root
@@ -44,6 +46,10 @@ module ActiveModel
 
       def build_serializer(object, options = {})
         serializer_class(object).new(object, options.merge(self.options))
+      end
+
+      def hidden?
+        !visible
       end
 
       class HasOne < Association
