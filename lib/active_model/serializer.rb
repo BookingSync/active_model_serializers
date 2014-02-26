@@ -130,6 +130,7 @@ end
     def associations
       associations = self.class._associations
       included_associations = filterize_associations(associations).keys
+      return {} if linked_section
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
           if association.embed_ids?
@@ -178,11 +179,12 @@ end
       included_associations = filterize_associations(associations).keys
       associations.each_with_object({}) do |(name, association), hash|
         if included_associations.include? name
-          if association.embed_in_root?
+          if association.embed_in_root? or linked_section
             association_serializer = build_serializer(association)
             hash.merge! association_serializer.embedded_in_root_associations
 
             serialized_data = association_serializer.serializable_object
+
             key = association.root_key
             if hash.has_key?(key)
               hash[key].concat(serialized_data).uniq!
@@ -210,6 +212,10 @@ end
       else
         associated_data.read_attribute_for_serialization(association.embed_key) if associated_data
       end
+    end
+
+    def linked_section
+      false
     end
 
     def serializable_object(options={})
