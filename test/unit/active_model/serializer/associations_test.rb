@@ -22,6 +22,9 @@ module ActiveModel
         @old_association = @association.dup
         @post = Post.new({ title: 'Title 1', body: 'Body 1', date: '1/1/2000' })
         @post_serializer = LightPostSerializer.new(@post)
+        @post_serializer.class_eval do
+          def _links_templates; {}; end
+        end
       end
 
       def teardown
@@ -40,7 +43,10 @@ module ActiveModel
         @association = LightPostSerializer._associations[:comments]
         @old_association = @association.dup
         @post = Post.new({ title: 'Title 1', body: 'Body 1', date: '1/1/2000' })
-        @post_serializer = LightPostSerializer.new(@post)
+        @post_serializer = LightPostSerializer.new(@post, include: :comments)
+        @post_serializer.class_eval do
+          def _links_templates; {}; end
+        end
       end
 
       def teardown
@@ -48,7 +54,6 @@ module ActiveModel
       end
 
       def test_show_hidden_association_with_include
-        @post_serializer = LightPostSerializer.new(@post, include: :comments)
         assert_equal({
           'light_post' => { title: 'Title 1', :comments => [{:content=>"C1"}, {:content=>"C2"}] }
         }, @post_serializer.as_json)

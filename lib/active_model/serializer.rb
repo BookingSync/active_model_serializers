@@ -112,8 +112,10 @@ end
       @wrap_in_array        = options[:_wrap_in_array]
       @fields               = options[:fields]
       @include_associations = Array(options[:include])
+      @url_options          = options[:url_options]
     end
     attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
+    attr_reader :url_options
 
     def json_key
       if root == true || root.nil?
@@ -224,6 +226,9 @@ end
       return @wrap_in_array ? [] : nil if @object.nil?
       hash = attributes
       hash.merge! associations
+      if respond_to?(:_links_templates) && _links_templates.present?
+        hash.merge!("_links_templates" => _links_templates)
+      end
       @wrap_in_array ? [hash] : hash
     end
     alias_method :serializable_hash, :serializable_object

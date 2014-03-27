@@ -40,7 +40,8 @@ module ActiveModel
 
     def serializable_object
       @object.map do |item|
-        serializer_for(item).serializable_object
+        serializer = serializer_for(item)
+        serializer.serializable_object
       end
     end
     alias_method :serializable_array, :serializable_object
@@ -49,7 +50,6 @@ module ActiveModel
       @object.each_with_object({}) do |item, hash|
         serializer_for(item).embedded_in_root_associations.each_pair do |type, objects|
           next if !objects || objects.flatten.empty?
-
           if hash.has_key?(type)
             hash[type].concat(objects).uniq!
           else
