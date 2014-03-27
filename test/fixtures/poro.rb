@@ -63,6 +63,10 @@ class LightPostSerializer < ActiveModel::Serializer
   attributes :title
 
   has_many :comments, visible: false
+
+  def _links_templates
+    {"light_posts.comments" => "http://example.com/comments/{posts.comments}"}
+  end
 end
 
 class CommentSerializer < ActiveModel::Serializer

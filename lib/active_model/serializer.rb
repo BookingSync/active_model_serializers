@@ -224,6 +224,9 @@ end
       return @wrap_in_array ? [] : nil if @object.nil?
       hash = attributes
       hash.merge! associations
+      if respond_to?(:_links_templates)
+        hash.merge!("_links_templates" => _links_templates)
+      end
       @wrap_in_array ? [hash] : hash
     end
     alias_method :serializable_hash, :serializable_object
