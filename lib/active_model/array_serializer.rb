@@ -20,12 +20,11 @@ module ActiveModel
       @meta            = options[@meta_key]
       @each_serializer = options[:each_serializer]
       @resource_name   = options[:resource_name]
-      @url_options     = options[:url_options]
+      @url_opts        = options[:url_opts]
       @fields          = options[:fields]
       @include         = options[:include]
     end
-    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
-    attr_reader :url_options
+    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields, :url_opts
 
     def json_key
       if root.nil?
@@ -37,8 +36,8 @@ module ActiveModel
 
     def serializer_for(item)
       serializer_class = @each_serializer || Serializer.serializer_for(item) || DefaultSerializer
-      serializer_class.new(item, scope: scope, fields: fields,
-        include: @include, url_options: url_options)
+      serializer_class.new(item, {scope: scope, fields: fields,
+        include: @include, url_opts: url_opts})
     end
 
     def serializable_object

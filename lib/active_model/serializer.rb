@@ -112,11 +112,10 @@ end
       @wrap_in_array        = options[:_wrap_in_array]
       @fields               = options[:fields]
       @include_associations = Array(options[:include])
-      @url_options   = options[:url_options]
+      @url_opts             = options[:url_opts]
     end
-    
-    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
-    attr_reader :url_options
+
+    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields, :url_opts
 
     def json_key
       if root == true || root.nil?
@@ -207,7 +206,7 @@ end
 
     def build_serializer(association)
       object = send(association.name)
-      association.build_serializer(object, scope: scope, url_options: url_options)
+      association.build_serializer(object, scope: scope, url_opts: url_opts)
     end
 
     def serialize(association)

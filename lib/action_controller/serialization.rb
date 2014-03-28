@@ -72,7 +72,7 @@ module ActionController
             options[param] = params[param].split(',').map(&:to_sym)
           end
         end
-        options[:url_options] = url_options
+        options[:url_opts] = url_opts
 
         serializer.new(resource, options)
       end
