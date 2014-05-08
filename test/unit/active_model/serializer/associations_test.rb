@@ -59,5 +59,52 @@ module ActiveModel
         }, @post_serializer.as_json)
       end
     end
+
+    class ReturnFilteredAssociations < Minitest::Test
+      def setup
+        @post = Post.new({ title: 'Title 1', body: 'Body 1', date: '1/1/2000' })
+      end
+
+      def test_return_hidden_associations_without_include
+        post_serializer = LightPostSerializer.new(@post)
+        assert_equal post_serializer.filtered_associations.keys, [:comments]
+      end
+
+      def test_dont_return_associations_when_filtered
+        post_serializer = LightPostSerializer.new(@post)
+        post_serializer.instance_eval do
+          def filter(keys)
+            keys - [:comments]
+          end
+        end
+        assert_equal post_serializer.filtered_associations.keys, []
+      end
+
+      def test_dont_return_associations_when_filtered_on_include
+        post_serializer = LightPostSerializer.new(@post, include: :comments)
+        post_serializer.instance_eval do
+          def filter(keys)
+            keys - [:comments]
+          end
+        end
+        assert_equal post_serializer.filtered_associations.keys, []
+      end
+    end
+
+    class ReturnVisibleAssociations < Minitest::Test
+      def setup
+        @post = Post.new({ title: 'Title 1', body: 'Body 1', date: '1/1/2000' })
+      end
+
+      def test_dont_show_hidden_associations
+        post_serializer = LightPostSerializer.new(@post)
+        assert_equal post_serializer.visible_associations.keys, []
+      end
+
+      def test_show_hidden_associations_on_include
+        post_serializer = LightPostSerializer.new(@post, include: :comments)
+        assert_equal post_serializer.filtered_associations.keys, [:comments]
+      end
+    end
   end
 end

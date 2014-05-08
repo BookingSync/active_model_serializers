@@ -134,9 +134,8 @@ end
 
     def associations
       associations = self.class._associations
-      included_associations = filterize_associations(associations).keys
       associations.each_with_object({}) do |(name, association), hash|
-        if included_associations.include? name
+        if visible_associations.keys.include? name
           if association.embed_ids?
             hash[association.key] = serialize_ids association
           elsif association.embed_objects?
@@ -150,13 +149,27 @@ end
     # which can be overwritten by user
     # then removes all associations which are hidden e.g
     # with option visible: false
-    def filterize_associations(associations)
+    def filterize_associations(associations, show_hidden = false)
       filtered_associations = filter(associations.keys)
       associations.reject do |name, association|
         next true if filtered_associations.exclude?(name)
         next false if @include_associations.include?(name)
-        true if association.hidden?
+        true if !show_hidden && association.hidden?
       end
+    end
+
+    # A hash of associations after all user filters and include options
+    # has been applied, includes also hidden associations
+    def filtered_associations
+      @filtered_associations ||= filterize_associations(
+        self.class._associations, true)
+    end
+
+    # A hash of associations which will be embed as ids or objects
+    # into the current document
+    def visible_associations
+      @visible_associations ||= filterize_associations(
+        self.class._associations)
     end
 
     # First filters keys using #filter method which can be overwritten
@@ -186,9 +199,8 @@ end
 
     def embedded_in_root_associations
       associations = self.class._associations
-      included_associations = filterize_associations(associations).keys
       associations.each_with_object({}) do |(name, association), hash|
-        if included_associations.include? name
+        if visible_associations.keys.include? name
           if association.embed_in_root?
             association_serializer = build_serializer(association)
             hash.merge! association_serializer.embedded_in_root_associations
