@@ -239,8 +239,13 @@ end
       return @wrap_in_array ? [] : nil if @object.nil?
       hash = attributes
       hash.merge! associations
-      if respond_to?(:_links_templates) && _links_templates.present?
-        hash.merge!("_links_templates" => _links_templates)
+      if respond_to?(:_links_templates) && !(templates = _links_templates).empty?
+        hash.merge!("_links_templates" => templates)
+      end
+      if respond_to?(:_links) && !(links = _links).empty?
+        # FIXME: it's at the beginning so that we don't have to fix
+        # all json responses in specs in BS
+        hash = {"links" => links}.merge(hash)
       end
       @wrap_in_array ? [hash] : hash
     end
