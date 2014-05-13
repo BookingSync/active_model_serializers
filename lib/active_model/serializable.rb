@@ -15,7 +15,6 @@ module ActiveModel
       else
         object
       end
-
     end
 
     def serializable_data
@@ -26,6 +25,7 @@ module ActiveModel
         if respond_to?(:_links_templates) && _links_templates.present?
           hash["links"] ||= {}
           hash["links"].merge!(_links_templates)
+          hash["links"].merge!(associations_links_templates)
         end
       end
     end
@@ -34,6 +34,7 @@ module ActiveModel
       {}
     end
 
+    # Extract link elements from object and put them in the root
     def extract_links_templates(object)
       {}.tap do |links|
         Array([object]).flatten.each do |object|

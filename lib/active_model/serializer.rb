@@ -113,9 +113,11 @@ end
       @fields               = options[:fields]
       @include_associations = Array(options[:include])
       @url_options          = options[:url_options]
+      @embed_association    = options.fetch(:embed_association, false)
     end
 
-    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
+    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields,
+      :embed_association
     attr_reader :url_options
 
     def json_key
@@ -235,13 +237,38 @@ end
       end
     end
 
+    def associations_links_templates
+      {}.tap do |hash|
+        self.class._associations.each do |name, association|
+          if visible_associations.keys.include?(name)
+            serializer = build_serializer(association)
+            hash.merge!(serializer.associations_links_templates)
+          end
+        end
+      end
+    end
+
+    # Return true if current serializer is for element of embed association
+    def embed_association?
+      @embed_association
+    end
+
     def serializable_object(options={})
       return @wrap_in_array ? [] : nil if @object.nil?
       hash = attributes
       hash.merge! associations
-      if respond_to?(:_links_templates) && !(templates = _links_templates).empty?
-        hash.merge!("_links_templates" => templates)
+
+      # Embed links templates only for root elements (not for embed associations)
+      # when embeding, fetch links templates from associations and merge them into
+      # root element, then in serializable.rb it's removed from this hash and put
+      # into root.
+      unless embed_association?
+        if respond_to?(:_links_templates) && !(templates = _links_templates).empty?
+          hash.merge!("_links_templates" =>
+            templates.merge(associations_links_templates))
+        end
       end
+
       if respond_to?(:_links) && !(links = _links).empty?
         # FIXME: it's at the beginning so that we don't have to fix
         # all json responses in specs in BS

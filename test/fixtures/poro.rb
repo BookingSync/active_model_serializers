@@ -66,11 +66,20 @@ class PostSerializer < ActiveModel::Serializer
   has_many :comments
 end
 
+class CommentWithAuthorSerializer < ActiveModel::Serializer
+  attributes :content
+
+  has_one :user, embed: :object, visible: false, serializer: UserSerializer
+
+  def _links_templates
+    {"comments.user" => "http://example.com/users/{comments.user}"}
+  end
+end
 
 class LightPostSerializer < ActiveModel::Serializer
   attributes :title
 
-  has_many :comments, visible: false
+  has_many :comments, visible: false, serializer: CommentWithAuthorSerializer
 
   def _links_templates
     {"light_posts.comments" => "http://example.com/comments/{posts.comments}"}

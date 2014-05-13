@@ -19,6 +19,7 @@ module ActiveModel
         @key           = options[:key]
         @embedded_key  = options[:root] || name
         @visible       = options.fetch(:visible, true)
+        @options[:embed_association] = true
 
         serializer = @options[:serializer]
         @serializer_from_options = serializer.is_a?(String) ? serializer.constantize : serializer

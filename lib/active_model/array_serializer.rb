@@ -23,8 +23,10 @@ module ActiveModel
       @url_options     = options[:url_options]
       @fields          = options[:fields]
       @include         = options[:include]
+      @embed_association = options.fetch(:embed_association, false)
     end
-    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields
+    attr_accessor :object, :scope, :root, :meta_key, :meta, :fields,
+      :embed_association
     attr_reader :url_options
 
     def json_key
@@ -38,15 +40,18 @@ module ActiveModel
     def serializer_for(item)
       serializer_class = @each_serializer || Serializer.serializer_for(item) || DefaultSerializer
       serializer_class.new(item, scope: scope, fields: fields,
-        include: @include, url_options: url_options)
+        include: @include, url_options: url_options,
+        embed_association: embed_association)
     end
 
     def serializable_object
-      @object.map do |item|
-        serializer = serializer_for(item)
-        serializer.serializable_object
-      end
+      serializers.map(&:serializable_object)
     end
+
+    def serializers
+      @object.map { |item| serializer_for(item) }
+    end
+
     alias_method :serializable_array, :serializable_object
 
     def embedded_in_root_associations
@@ -60,6 +65,14 @@ module ActiveModel
           end
         end
       end
+    end
+
+    # In our case all elements of array have the same type
+    # so take _links_templates from the first one
+    def associations_links_templates
+      serializer = serializers.first
+      serializer.respond_to?(:_links_templates) ?
+        serializer._links_templates : {}
     end
   end
 end
